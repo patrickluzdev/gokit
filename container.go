@@ -21,14 +21,6 @@ func NewContainer() *Container {
 	}
 }
 
-func (c *Container) Bind(key string, factory any) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.bindings[key] = factory
-	c.singletons[key] = false
-}
-
 func (c *Container) Make(key string) any {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -53,12 +45,20 @@ func (c *Container) Make(key string) any {
 	return instance
 }
 
-func (c *Container) Singleton(key string, factory any) {
+func (c *Container) Bind(key string, factory any) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.bindings[key] = factory
 	c.singletons[key] = false
+}
+
+func (c *Container) Singleton(key string, factory any) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.bindings[key] = factory
+	c.singletons[key] = true
 }
 
 func (c *Container) callFactory(factory any) any {

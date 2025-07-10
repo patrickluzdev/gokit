@@ -1,6 +1,10 @@
 package gokit
 
-import "github.com/patrickluzdev/gokit/contracts"
+import (
+	"github.com/patrickluzdev/gokit/contracts"
+	"github.com/patrickluzdev/gokit/facades"
+	"github.com/patrickluzdev/gokit/providers"
+)
 
 type Application struct {
 	*Container
@@ -19,13 +23,13 @@ func New() contracts.Application {
 	}
 
 	app.autoRegisterProviders()
+	facades.SetApp(app)
 
 	return app
 }
 
 func (a *Application) autoRegisterProviders() {
-	temp := make([]contracts.ServiceProvider, 0)
-	a.providers = append(a.providers, temp...)
+	a.providers = append(a.providers, &providers.ConfigProvider{})
 }
 
 func (a *Application) Boot() {
@@ -42,4 +46,8 @@ func (a *Application) Boot() {
 	}
 
 	a.booted = true
+}
+
+func (a *Application) Config() contracts.Config {
+	return a.Make("config").(contracts.Config)
 }

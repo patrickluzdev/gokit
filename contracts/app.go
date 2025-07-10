@@ -7,6 +7,8 @@ type Application interface {
 
 	AddProvider(provider ServiceProvider)
 	Boot()
+
+	Config() Config
 }
 
 type ServiceProvider interface {
