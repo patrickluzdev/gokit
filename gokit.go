@@ -1,38 +1,31 @@
 package gokit
 
-import (
-	"github.com/patrickluzdev/gokit/contracts"
-	"github.com/patrickluzdev/gokit/facades"
-	"github.com/patrickluzdev/gokit/providers"
-)
-
-type Application struct {
+type App struct {
 	*Container
-	providers []contracts.ServiceProvider
+	providers []ServiceProvider
 	booted    bool
 }
 
-func (a *Application) AddProvider(provider contracts.ServiceProvider) {
+func (a *App) AddProvider(provider ServiceProvider) {
 	a.providers = append(a.providers, provider)
 }
 
-func New() contracts.Application {
-	app := &Application{
+func New() Application {
+	app := &App{
 		Container: NewContainer(),
-		providers: make([]contracts.ServiceProvider, 0),
+		providers: make([]ServiceProvider, 0),
 	}
 
 	app.autoRegisterProviders()
-	facades.SetApp(app)
-
+	app.boot()
 	return app
 }
 
-func (a *Application) autoRegisterProviders() {
-	a.providers = append(a.providers, &providers.ConfigProvider{})
+func (a *App) autoRegisterProviders() {
+	a.providers = append(a.providers, &ConfigProvider{}, &RouterProvider{})
 }
 
-func (a *Application) Boot() {
+func (a *App) boot() {
 	if a.booted {
 		return
 	}
@@ -48,6 +41,10 @@ func (a *Application) Boot() {
 	a.booted = true
 }
 
-func (a *Application) Config() contracts.Config {
-	return a.Make("config").(contracts.Config)
+func (a *App) Config() Config {
+	return a.Make(ConfigBinding).(Config)
+}
+
+func (a *App) Router() Router {
+	return a.Make(RouterBinding).(Router)
 }

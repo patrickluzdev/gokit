@@ -1,29 +1,28 @@
-package config
+package gokit
 
 import (
 	"bufio"
+	"maps"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/patrickluzdev/gokit/contracts"
 )
 
-type Config struct {
+type config struct {
 	values map[string]string
 	mu     sync.RWMutex
 }
 
-func New(envPath string) contracts.Config {
-	c := &Config{
+func NewConfig(envPath string) Config {
+	c := &config{
 		values: make(map[string]string),
 	}
 	c.loadEnv(envPath)
 	return c
 }
 
-func (c *Config) loadEnv(path string) {
+func (c *config) loadEnv(path string) {
 	file, err := os.Open(path)
 	if err != nil {
 		return
@@ -46,7 +45,7 @@ func (c *Config) loadEnv(path string) {
 	}
 }
 
-func (c *Config) Get(key string) string {
+func (c *config) Get(key string) string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -57,14 +56,14 @@ func (c *Config) Get(key string) string {
 	return c.values[key]
 }
 
-func (c *Config) GetWithDefault(key, defaultValue string) string {
+func (c *config) GetWithDefault(key, defaultValue string) string {
 	if value := c.Get(key); value != "" {
 		return value
 	}
 	return defaultValue
 }
 
-func (c *Config) GetInt(key string) int {
+func (c *config) GetInt(key string) int {
 	value := c.Get(key)
 	if value == "" {
 		return 0
@@ -77,24 +76,22 @@ func (c *Config) GetInt(key string) int {
 	return intVal
 }
 
-func (c *Config) GetBool(key string) bool {
+func (c *config) GetBool(key string) bool {
 	value := strings.ToLower(c.Get(key))
 	return value == "true" || value == "1" || value == "yes"
 }
 
-func (c *Config) Set(key, value string) {
+func (c *config) Set(key, value string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.values[key] = value
 }
 
-func (c *Config) All() map[string]string {
+func (c *config) All() map[string]string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	result := make(map[string]string)
-	for k, v := range c.values {
-		result[k] = v
-	}
+	maps.Copy(result, c.values)
 	return result
 }
