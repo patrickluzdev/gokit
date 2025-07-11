@@ -22,7 +22,7 @@ func New() Application {
 }
 
 func (a *App) autoRegisterProviders() {
-	a.providers = append(a.providers, &ConfigProvider{}, &RouterProvider{})
+	a.providers = append(a.providers, &ConfigProvider{}, &RouterProvider{}, &DatabaseProvider{})
 }
 
 func (a *App) boot() {
@@ -47,4 +47,7 @@ func (a *App) Config() Config {
 
 func (a *App) Router() Router {
 	return a.Make(RouterBinding).(Router)
+}
+func (a *App) DB() Database {
+	return a.Make(DatabaseBinding).(Database)
 }

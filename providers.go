@@ -27,3 +27,17 @@ func (p *RouterProvider) Register(app Application) {
 }
 
 func (p *RouterProvider) Boot(app Application) {}
+
+type DatabaseProvider struct{}
+
+func (p *DatabaseProvider) Register(app Application) {
+	app.Singleton(DatabaseBinding, func() any {
+		config := app.Config()
+		db := NewDB(config)
+		return db
+	})
+}
+
+func (p *DatabaseProvider) Boot(app Application) {
+	app.Make(DatabaseBinding)
+}

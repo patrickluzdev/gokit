@@ -1,10 +1,14 @@
 package gokit
 
-import "net/http"
+import (
+	"database/sql"
+	"net/http"
+)
 
 const (
-	RouterBinding = "gokit.router"
-	ConfigBinding = "gokit.config"
+	RouterBinding   = "gokit.router"
+	ConfigBinding   = "gokit.config"
+	DatabaseBinding = "gokit.database"
 )
 
 type Config interface {
@@ -25,6 +29,7 @@ type Application interface {
 
 	Config() Config
 	Router() Router
+	DB() Database
 }
 
 type ServiceProvider interface {
@@ -54,7 +59,7 @@ type Context interface {
 	Query(key string) string
 	Header(key string) string
 
-	ParseJSON(v interface{}) error
+	ParseJSON(v any) error
 	ParseString() string
 	Body() []byte
 
@@ -70,4 +75,83 @@ type Response interface {
 	Status() int
 	Body() []byte
 	Headers() map[string]string
+}
+
+type Database interface {
+	Connection() *sql.DB
+
+	Table(name string) QueryBuilder
+	Model(model any) QueryBuilder
+	Raw(sql string, args ...any) QueryBuilder
+
+	Begin() (Transaction, error)
+	Transaction(fn func(tx Transaction) error) error
+
+	Migrate() error
+	Seed() error
+
+	Exec(sql string, args ...any) error
+}
+
+type QueryBuilder interface {
+	Select(columns ...string) QueryBuilder
+	Where(query any, args ...any) QueryBuilder
+	WhereIn(column string, values []any) QueryBuilder
+	Join(query string, args ...any) QueryBuilder
+	OrderBy(column string, direction ...string) QueryBuilder
+	GroupBy(columns ...string) QueryBuilder
+	Having(query any, args ...any) QueryBuilder
+	Limit(limit int) QueryBuilder
+	Offset(offset int) QueryBuilder
+
+	Preload(query string, args ...any) QueryBuilder
+	Joins(query string, args ...any) QueryBuilder
+
+	Find(dest any) error
+	First(dest any) error
+	Create(value any) error
+	Update(values any) error
+	Delete() error
+	Count() (int64, error)
+
+	Begin() (QueryBuilder, error)
+	Commit() error
+	Rollback() error
+
+	ToSQL() (string, []any, error)
+}
+
+type Transaction interface {
+	QueryBuilder
+
+	Commit() error
+	Rollback() error
+	SavePoint(name string) error
+	RollbackTo(name string) error
+
+	Table(name string) QueryBuilder
+	Model(model any) QueryBuilder
+}
+
+type Migrator interface {
+	Run() error
+	Rollback() error
+	Fresh() error
+	Status() error
+	AddMigration(migration Migration)
+}
+
+type Migration interface {
+	ID() string
+	Up() error
+	Down() error
+}
+
+type SeederManager interface {
+	Add(seeder Seeder)
+	Run() error
+}
+
+type Seeder interface {
+	Run() error
 }

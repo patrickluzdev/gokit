@@ -11,7 +11,7 @@ import (
 
 type config struct {
 	values map[string]string
-	mu     sync.RWMutex
+	mu     sync.Mutex
 }
 
 func NewConfig(envPath string) Config {
@@ -46,8 +46,8 @@ func (c *config) loadEnv(path string) {
 }
 
 func (c *config) Get(key string) string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -88,8 +88,8 @@ func (c *config) Set(key, value string) {
 }
 
 func (c *config) All() map[string]string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	result := make(map[string]string)
 	maps.Copy(result, c.values)

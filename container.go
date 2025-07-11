@@ -23,23 +23,32 @@ func NewContainer() *Container {
 
 func (c *Container) Make(key string) any {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	if c.singletons[key] {
 		if instance, exists := c.instances[key]; exists {
+			c.mu.Unlock()
 			return instance
 		}
 	}
 
 	factory, exists := c.bindings[key]
 	if !exists {
+		c.mu.Unlock()
 		panic(fmt.Sprintf("Service not found: %s", key))
 	}
+
+	c.mu.Unlock()
 
 	instance := c.callFactory(factory)
 
 	if c.singletons[key] {
+		c.mu.Lock()
+		if existingInstance, exists := c.instances[key]; exists {
+			c.mu.Unlock()
+			return existingInstance
+		}
 		c.instances[key] = instance
+		c.mu.Unlock()
 	}
 
 	return instance

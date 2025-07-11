@@ -50,11 +50,13 @@ func (r *router) GET(path string, handler HandlerFunc) {
 func (r *router) Group(prefix string, fn func(Router)) {
 	groupRouter := &router{
 		mux:        r.mux,
-		routes:     r.routes,
-		middleware: r.middleware,
+		routes:     make([]Route, 0),
+		middleware: make([]MiddlewareFunc, len(r.middleware)),
 		prefix:     r.prefix + prefix,
 	}
+	copy(groupRouter.middleware, r.middleware)
 	fn(groupRouter)
+	r.routes = append(r.routes, groupRouter.routes...)
 }
 
 func (r *router) Listen(addr string) error {
